@@ -170,129 +170,66 @@ HTTP 消息包含开始的一行、头信息、还有消息的内容。HTTP 的�
 
 ### 1.4 请求目标和 URI 
 
-> 翻译到此先告一段落，此规范篇幅有点过长，需要消耗的时间挺长的，暂且翻译至此，他日再战。
+根据 RFC7230，请求消息包含「请求目标」做为请求行的第二个段落。请求目标可以是以下形式之一：
 
+- **原始形式** ，由路径和查询字符串（如果存在）组成；这通常被称为相对URL。通过TCP传输的消息通常是原始形式；scheme 和认证数据通常仅通过CGI变量存在。
+- **绝对形式** ，包括 scheme 、认证数据（「[user-info@]host[:port]」，其中括号中的项是可选的），路径（如果存在），查询字符串（如果存在）。这通常被称为绝对 URI，并且是 RFC 3986 中详细说明的唯一指定 URI 的形式。这个形式通常在向 HTTP 代理发出请求时使用。
+- **认证形式** ，只包含认证信息。通常仅用于从 HTTP 客户端和代理服务器之间建立连接请求时使用。
+- **星号形式** ，仅由字符串 `*` 组成，并与 OPTIONS 方法一起使用，以确定 Web 服务器的性能。
 
-Per RFC 7230, request messages contain a "request-target" as the second segment
-of the request line. The request target can be one of the following forms:
+除了这些请求目标之外，通常还有一个不同于请求目标的「有效 URL」。有效 URL 不在 HTTP 消息中传输，但它用于确定发出请求的协议（Http 或 Https）、端口和主机名。
 
-- **origin-form**, which consists of the path, and, if present, the query
-  string; this is often referred to as a relative URL. Messages as transmitted
-  over TCP typically are of origin-form; scheme and authority data are usually
-  only present via CGI variables.
-- **absolute-form**, which consists of the scheme, authority
-  ("[user-info@]host[:port]", where items in brackets are optional), path (if
-  present), query string (if present), and fragment (if present). This is often
-  referred to as an absolute URI, and is the only form to specify a URI as
-  detailed in RFC 3986. This form is commonly used when making requests to
-  HTTP proxies.
-- **authority-form**, which consists of the authority only. This is typically
-  used in CONNECT requests only, to establish a connection between an HTTP
-  client and a proxy server.
-- **asterisk-form**, which consists solely of the string `*`, and which is used
-  with the OPTIONS method to determine the general capabilities of a web server.
+有效 URL 由 `UriInterface` 接口表示。`UriInterface` 是 RFC 3986 （主要用例）中指定的 HTTP 和 HTTPS URI 的模型。该接口提供了与各种 URI 部分交互的方法，这将消除重复解析 URI 的需要。还定义了一个 `__toString()` 方法，用于将建模的 URI 转换为其字符串表示形式。
 
-Aside from these request-targets, there is often an 'effective URL' which is
-separate from the request target. The effective URL is not transmitted within
-an HTTP message, but it is used to determine the protocol (http/https), port
-and hostname for making the request.
+当使用 `getRequestTarget()` 方法检索请求目标时，默认情况下此方法将使用 URI 对象并提取所有必要的组件来构建 *原始形式*。*原始形式* 是迄今为止最常见的请求目标。
 
-The effective URL is represented by `UriInterface`. `UriInterface` models HTTP
-and HTTPS URIs as specified in RFC 3986 (the primary use case). The interface
-provides methods for interacting with the various URI parts, which will obviate
-the need for repeated parsing of the URI. It also specifies a `__toString()`
-method for casting the modeled URI to its string representation.
+如果用户希望使用其他三种形式中，或者如果想要显式覆盖请求目标，则可以使用 `withRequestTarget()` 来实现。
 
-When retrieving the request-target with `getRequestTarget()`, by default this
-method will use the URI object and extract all the necessary components to
-construct the _origin-form_. The _origin-form_ is by far the most common
-request-target.
+调用此方法不会影响 URI，因为 URI 是从 `getUri()` 返回的。
 
-If it's desired by an end-user to use one of the other three forms, or if the
-user wants to explicitly override the request-target, it is possible to do so
-with `withRequestTarget()`.
+例如，用户可能想要向服务器发起一个星号形式的请求：
 
-Calling this method does not affect the URI, as it is returned from `getUri()`.
-
-For example, a user may want to make an asterisk-form request to a server:
-
-```php
+```text-html-php
 $request = $request
     ->withMethod('OPTIONS')
     ->withRequestTarget('*')
     ->withUri(new Uri('https://example.org/'));
 ```
 
-This example may ultimately result in an HTTP request that looks like this:
+这个示例最终可能会导致 HTTP 请求类似下例：
 
-```http
+```source-httpspec
 OPTIONS * HTTP/1.1
 ```
 
-But the HTTP client will be able to use the effective URL (from `getUri()`),
-to determine the protocol, hostname and TCP port.
+但是 HTTP 客户端将能够使用有效的 URL （来自 `getUri()` ）来确定协议、主机名和 TCP 端口号。
 
-An HTTP client MUST ignore the values of `Uri::getPath()` and `Uri::getQuery()`,
-and instead use the value returned by `getRequestTarget()`, which defaults
-to concatenating these two values.
+一个 HTTP 客户端 `必须` 忽略 `Uri::getPath()` 和 `Uri::getQuery()` 的值，而是用 `getRequestTarget()` 返回的值，默认为连接前面两个值。
 
-Clients that choose to not implement 1 or more of the 4 request-target forms,
-MUST still use `getRequestTarget()`. These clients MUST reject request-targets
-they do not support, and MUST NOT fall back on the values from `getUri()`.
+选择未实现上面四种请求目标形式的客户端，`必须` 依然使用 `getRequestTarget()`。这些客户端 `必须` 拒绝它们不支持的请求目标，并且 `不得` 依赖于 `getUri()` 的值。
 
-`RequestInterface` provides methods for retrieving the request-target or
-creating a new instance with the provided request-target. By default, if no
-request-target is specifically composed in the instance, `getRequestTarget()`
-will return the origin-form of the composed URI (or "/" if no URI is composed).
-`withRequestTarget($requestTarget)` creates a new instance with the
-specified request target, and thus allows developers to create request messages
-that represent the other three request-target forms (absolute-form,
-authority-form, and asterisk-form). When used, the composed URI instance can
-still be of use, particularly in clients, where it may be used to create the
-connection to the server.
+`RequestInterface` 提供了检索请求目标或用提供的请求目标创建一个新实例的方法。默认情况下，如果实例中没有专门组合请求目标， `getRequestTarget()` 将会返回组合 URI 的原始形式（如果没有组成 URI 则返回「/」）。`withRequestTarget($requestTarget)` 使用指定的请求目标创建一个新实例，从而允许开发人员创建表示其他三个请求目标形式（绝对形式、认证形式和星号形式）。使用时，组合的 URI 实例仍然可以使用，特别是在客户端中，它可以用于创建与服务器的连接。
 
-### 1.5 Server-side Requests
 
-`RequestInterface` provides the general representation of an HTTP request
-message. However, server-side requests need additional treatment, due to the
-nature of the server-side environment. Server-side processing needs to take into
-account Common Gateway Interface (CGI), and, more specifically, PHP's
-abstraction and extension of CGI via its Server APIs (SAPI). PHP has provided
-simplification around input marshaling via superglobals such as:
+### 1.5 服务端请求
 
-- `$_COOKIE`, which deserializes and provides simplified access for HTTP
-  cookies.
-- `$_GET`, which deserializes and provides simplified access for query string
-  arguments.
-- `$_POST`, which deserializes and provides simplified access for urlencoded
-  parameters submitted via HTTP POST; generically, it can be considered the
-  results of parsing the message body.
-- `$_FILES`, which provides serialized metadata around file uploads.
-- `$_SERVER`, which provides access to CGI/SAPI environment variables, which
-  commonly include the request method, the request scheme, the request URI, and
-  headers.
+`RequestInterface` 提供了 HTTP 请求消息的通常表示形式。但是，由于服务器端环境的性质，服务器端请求需要额外的处理。服务器端处理需要考虑通用网关接口（ CGI ），更具体地说，需要考虑 PHP 通过其服务器 API （ SAPI ）对 CGI 的抽象和扩展。PHP 通过超级全局变量提供了关于输入编组的简化，例如：
 
-`ServerRequestInterface` extends `RequestInterface` to provide an abstraction
-around these various superglobals. This practice helps reduce coupling to the
-superglobals by consumers, and encourages and promotes the ability to test
-request consumers.
+- `$_COOKIE` ，反序列化了 HTTP cookie，并提供了简化的访问方式。
+- `$_GET` ，反序列化了查询字符串并提供了简化的访问方式。
+- `$_POST` ，对通过 urlencode 编码提交的 HTTP POST 信息进化反序列化并提供了简化的访问方式；通常可以认为是解析消息体的结果。
+- `$_FILES` ，关于文件上传的元数据反序列化结果。
+- `$_SERVER` ，提供了 CGI/SAPI 环境变量的访问，这些变量通常包括请求方法、请求 scheme、请求 URI 和报头。
 
-The server request provides one additional property, "attributes", to allow
-consumers the ability to introspect, decompose, and match the request against
-application-specific rules (such as path matching, scheme matching, host
-matching, etc.). As such, the server request can also provide messaging between
-multiple request consumers.
+`ServerRequestInterface` 继承于 `RequestInterface`，提供围绕这些超全局变量的抽象访问。这种做法有助于减少开发人员对超全局的耦合，鼓励对代码的测试，并提升了测试人员对相应代码的测试能力。
 
-### 1.6 Uploaded files
+服务器请求提供了一个附加的属性，「attributes」，以便于开发人员可以根据应用程序的特定规则（例如路径匹配、scheme 匹配、主机匹配等）自检、分解和匹配请求。这样，服务器请求还可以在多段请求逻辑中进行消息传递。
 
-`ServerRequestInterface` specifies a method for retrieving a tree of upload
-files in a normalized structure, with each leaf an instance of
-`UploadedFileInterface`.
+### 1.6 文件上传
 
-The `$_FILES` superglobal has some well-known problems when dealing with arrays
-of file inputs. As an example, if you have a form that submits an array of files
-— e.g., the input name "files", submitting `files[0]` and `files[1]` — PHP will
-represent this as:
+`ServerRequestInterface` 指定了一种在规范化结构中检索上传文件树的方法，每个叶子都是一个 `UploadedFileInterface` 的实例。
+
+超全局变量 `$_FILES` 在处理文件数组式的时候存在一些众所周知的问题。具体而言，页面的表单里有多个 input 框，name 属性是 `files[]`，然后提交文件，PHP 的 `$_FILES` 变量形式如下：
 
 ```php
 array(
@@ -305,12 +242,12 @@ array(
             0 => 'text/plain',
             1 => 'text/html',
         ),
-        /* etc. */
+        /* 等等其他属性 */
     ),
 )
 ```
 
-instead of the expected:
+而不是预期的：
 
 ```php
 array(
@@ -318,35 +255,29 @@ array(
         0 => array(
             'name' => 'file0.txt',
             'type' => 'text/plain',
-            /* etc. */
+        	/* 等等其他属性 */
         ),
         1 => array(
             'name' => 'file1.html',
             'type' => 'text/html',
-            /* etc. */
+        	/* 等等其他属性 */
         ),
     ),
 )
 ```
 
-The result is that consumers need to know this language implementation detail,
-and write code for gathering the data for a given upload.
+这样造成的结果是开发人员必须知道这种语言实现细节，并为之编写特定的代码。
 
-Additionally, scenarios exist where `$_FILES` is not populated when file uploads
-occur:
+另外，如果发生以下情况， `$_FILES` 会是空数组：
 
-- When the HTTP method is not `POST`.
-- When unit testing.
-- When operating under a non-SAPI environment, such as [ReactPHP](http://reactphp.org).
+- HTTP 方法不是 `POST`。
+- 单元测试的时候。
+- 在非 SAPI 环境下运行的时候，比如 [ReactPHP](http://reactphp.org)。
 
-In such cases, the data will need to be seeded differently. As examples:
+在这些情况下，数据需要以不同的方式获取。比如：
 
-- A process might parse the message body to discover the file uploads. In such
-  cases, the implementation may choose *not* to write the file uploads to the
-  file system, but instead wrap them in a stream in order to reduce memory,
-  I/O, and storage overhead.
-- In unit testing scenarios, developers need to be able to stub and/or mock the
-  file upload metadata in order to validate and verify different scenarios.
+- 进程可以解析消息体来发现上传的文件。这种情况下，实现方式可以选择不将上传文件写入文件系统，而是将它们包装在流中以减少内存、I/O 和存储开销。
+- 在单元测试的场景下，开发人员需要能够对文件上桩或模仿的方式来验证和检查不同场景的情况。
 
 `getUploadedFiles()` provides the normalized structure for consumers.
 Implementations are expected to:
