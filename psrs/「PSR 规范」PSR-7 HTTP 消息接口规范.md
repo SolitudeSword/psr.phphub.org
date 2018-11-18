@@ -189,7 +189,7 @@ HTTP 消息包含开始的一行、头信息、还有消息的内容。HTTP 的�
 
 例如，用户可能想要向服务器发起一个星号形式的请求：
 
-```text-html-php
+```php
 $request = $request
     ->withMethod('OPTIONS')
     ->withRequestTarget('*')
@@ -279,25 +279,20 @@ array(
 - 进程可以解析消息体来发现上传的文件。这种情况下，实现方式可以选择不将上传文件写入文件系统，而是将它们包装在流中以减少内存、I/O 和存储开销。
 - 在单元测试的场景下，开发人员需要能够对文件上桩或模仿的方式来验证和检查不同场景的情况。
 
-`getUploadedFiles()` provides the normalized structure for consumers.
-Implementations are expected to:
+`getUploadedFiles()` 将为开发者提供规范化的结构。实现方式的返回定义是：
 
-- Aggregate all information for a given file upload, and use it to populate a
-  `Psr\Http\Message\UploadedFileInterface` instance.
-- Re-create the submitted tree structure, with each leaf being the appropriate
-  `Psr\Http\Message\UploadedFileInterface` instance for the given location in
-  the tree.
+- 聚合上传文件的所有信息，并填充 `Psr\Http\Message\UploadedFileInterface` 实例。
+- 重新创建提交的树结构，相应位置的叶结点都是一个适当的 `Psr\Http\Message\UploadedFileInterface` 实例。
 
-The tree structure referenced should mimic the naming structure in which files
-were submitted.
+引用的树结构 `应该` 模仿提交的文件结构。
 
-In the simplest example, this might be a single named form element submitted as:
+在最简单的示例中，这可能是单个被命名的提交表单元素：
 
 ```html
 <input type="file" name="avatar" />
 ```
 
-In this case, the structure in `$_FILES` would look like:
+在这种情况下，`$_FILES` 的结构如下：
 
 ```php
 array(
@@ -311,21 +306,21 @@ array(
 )
 ```
 
-The normalized form returned by `getUploadedFiles()` would be:
+`getUploadedFiles()` 返回的规范化形式将是：
 
 ```php
 array(
-    'avatar' => /* UploadedFileInterface instance */
+    'avatar' => /* UploadedFileInterface 实例 */
 )
 ```
 
-In the case of an input using array notation for the name:
+input 名称是一种数组表示形式的情况：
 
 ```html
 <input type="file" name="my-form[details][avatar]" />
 ```
 
-`$_FILES` ends up looking like this:
+`$_FILES` 最终看下来像是这样的：
 
 ```php
 array(
@@ -343,31 +338,28 @@ array(
 )
 ```
 
-And the corresponding tree returned by `getUploadedFiles()` should be:
+`getUploadedFiles()` 的返回结果 `应该` 是：
 
 ```php
 array(
     'my-form' => array(
         'details' => array(
-            'avatar' => /* UploadedFileInterface instance */
+            'avatar' => /* UploadedFileInterface 实例 */
         ),
     ),
 )
 ```
 
-In some cases, you may specify an array of files:
+在某些情况下，可以指定文件的 input 为一个数组：
 
 ```html
 Upload an avatar: <input type="file" name="my-form[details][avatars][]" />
 Upload an avatar: <input type="file" name="my-form[details][avatars][]" />
 ```
 
-(As an example, JavaScript controls might spawn additional file upload inputs to
-allow uploading multiple files at once.)
+（例如，JavaScript 控件可能会产生额外的文件上传输入，以允许一次上传多个文件。）
 
-In such a case, the specification implementation must aggregate all information
-related to the file at the given index. The reason is because `$_FILES` deviates
-from its normal structure in such cases:
+这种情况下，其实现 `必须` 按给定的索引聚合所有上传文件的信息。因为这种情况下的 `$_FILES` 偏离了正常结构：
 
 ```php
 array(
@@ -405,34 +397,31 @@ array(
 )
 ```
 
-The above `$_FILES` array would correspond to the following structure as
-returned by `getUploadedFiles()`:
+上面的 `$_FILES` 将对应于 `getUploadedFiles()` 返回的如下结构：
 
 ```php
 array(
     'my-form' => array(
         'details' => array(
             'avatars' => array(
-                0 => /* UploadedFileInterface instance */,
-                1 => /* UploadedFileInterface instance */,
-                2 => /* UploadedFileInterface instance */,
+                0 => /* UploadedFileInterface 实例 */,
+                1 => /* UploadedFileInterface 实例 */,
+                2 => /* UploadedFileInterface 实例 */,
             ),
         ),
     ),
 )
 ```
 
-Consumers would access index `1` of the nested array using:
+开发人员可以用以下形式访问嵌套数组的索引 `1`：
 
 ```php
 $request->getUploadedFiles()['my-form']['details']['avatars'][1];
 ```
 
-Because the uploaded files data is derivative (derived from `$_FILES` or the
-request body), a mutator method, `withUploadedFiles()`, is also present in the
-interface, allowing delegation of the normalization to another process.
+因为上传的文件数据是派生的（派生于 `$_FILES` 或请求体），所以接口还有一个设置方法 `withUploadedFiles()`，允许修改其内容。
 
-In the case of the original examples, consumption resembles the following:
+在原始示例的情形下，接口调用者的代码可能如下所示：
 
 ```php
 $file0 = $request->getUploadedFiles()['files'][0];
@@ -447,23 +436,15 @@ printf(
 // "Received the files file0.txt and file1.html"
 ```
 
-This proposal also recognizes that implementations may operate in non-SAPI
-environments. As such, `UploadedFileInterface` provides methods for ensuring
-operations will work regardless of environment. In particular:
+这个设计方案还考虑到实现方案可以在非 SAPI 环境中运行。 As such, `UploadedFileInterface` provides methods for ensuring operations will work regardless of environment. 特别是：
 
-- `moveTo($targetPath)` is provided as a safe and recommended alternative to calling
-  `move_uploaded_file()` directly on the temporary upload file. Implementations
-  will detect the correct operation to use based on environment.
-- `getStream()` will return a `StreamInterface` instance. In non-SAPI
-  environments, one proposed possibility is to parse individual upload files
-  into `php://temp` streams instead of directly to files; in such cases, no
-  upload file is present. `getStream()` is therefore guaranteed to work
-  regardless of environment.
+- `moveTo($targetPath)` 用来做为一个安全且推荐的代替在临时上传文件上调用 `move_uploaded_file()` 的方法。实现将根据环境检查正确的操作。
+- `getStream()` 将会返回一个 `StreamInterface` 实例。在非 SAPI 环境中，提出的一种可能性是将单个上传文件解析为 `php://temp` 流而不是直接解析到文件；在这种情况下，不存在上传文件。 因此，无论环境如何，`getStream()` 都可以保证工作。
 
-As examples:
+例如：
 
 ```
-// Move a file to an upload directory
+// 移动文件至上传目录
 $filename = sprintf(
     '%s.%s',
     create_uuid(),
@@ -471,18 +452,15 @@ $filename = sprintf(
 );
 $file0->moveTo(DATA_DIR . '/' . $filename);
 
-// Stream a file to Amazon S3.
-// Assume $s3wrapper is a PHP stream that will write to S3, and that
-// Psr7StreamWrapper is a class that will decorate a StreamInterface as a PHP
-// StreamWrapper.
+// 将文件流式传输至 Amazon S3。
+// 假设 $s3wrapper 是一个将写入 S3 的 PHP 流，而 Psr7StreamWrapper 是一个将 StreamInterface 作为 PHP StreamWrapper 进行装饰的类。
 $stream = new Psr7StreamWrapper($file1->getStream());
 stream_copy_to_stream($stream, $s3wrapper);
 ```
 
-## 2. Package
+## 2. 扩展包
 
-上面讨论的接口和类库已经整合成为扩展包：
-[psr/http-message](https://packagist.org/packages/psr/http-message)。
+上面讨论的接口和类库已经整合成为扩展包：[psr/http-message](https://packagist.org/packages/psr/http-message)。
 
 ## 3. Interfaces
 
