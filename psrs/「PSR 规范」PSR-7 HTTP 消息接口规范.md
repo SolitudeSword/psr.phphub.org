@@ -462,7 +462,7 @@ stream_copy_to_stream($stream, $s3wrapper);
 
 上面讨论的接口和类库已经整合成为扩展包：[psr/http-message](https://packagist.org/packages/psr/http-message)。
 
-## 3. Interfaces
+## 3. 接口
 
 ### 3.1 `Psr\Http\Message\MessageInterface`
 
@@ -472,8 +472,8 @@ namespace Psr\Http\Message;
 
 /**
  * 
- * HTTP 消息值得是客户端发起的「请求」和服务器端返回的「响应」，此接口
- * 定义了他们通用的方法。
+ * HTTP 消息包括客户端向服务器发起的「请求」和服务器端返回给客户端的「响应」。
+ * 此接口定义了他们通用的方法。
  * 
  * HTTP 消息是被视为无法修改的，所有能修改状态的方法，都 **必须** 有一套
  * 机制，在内部保持好原有的内容，然后把修改状态后的信息返回。
@@ -484,9 +484,9 @@ namespace Psr\Http\Message;
 interface MessageInterface
 {
     /**
-     * 获取字符串形式的 HTTP 协议版本信息
+     * 获取字符串形式的 HTTP 协议版本信息。
      *
-     * 字符串必须包含 HTTP 版本数字，如："1.1", "1.0"。
+     * 字符串 **必须** 包含 HTTP 版本数字（如：「1.1」, 「1.0」）。
      *
      * @return string HTTP 协议版本
      */
@@ -495,7 +495,7 @@ interface MessageInterface
     /**
      * 返回指定 HTTP 版本号的消息实例。
      *
-     * 传参的版本号必须 **只** 包含 HTTP 版本数字，如："1.1", "1.0"。
+     * 传参的版本号只 **必须** 包含 HTTP 版本数字，如："1.1", "1.0"。
      *
      * 此方法在实现的时候，**必须** 保留原有的不可修改的 HTTP 消息对象，然后返回
      * 一个新的带有传参进去的 HTTP 版本的实例
@@ -506,10 +506,10 @@ interface MessageInterface
     public function withProtocolVersion($version);
 
     /**
-     * 获取所有的头信息
+     * 获取所有的报头信息
      *
-     * 返回的二维数组中，第一维数组的「键」代表单条头信息的名字，「值」是
-     * 以数据形式返回的，见以下实例：
+     * 返回的二维数组中，第一维数组的「键」代表单条报头信息的名字，「值」是
+     * 以数组形式返回的，见以下实例：
      *
      *     // 把「值」的数据当成字串打印出来
      *     foreach ($message->getHeaders() as $name => $values) {
@@ -523,87 +523,87 @@ interface MessageInterface
      *         }
      *     }
      *
-     * 虽然头信息是没有大小写之分，但是使用 `getHeaders()` 会返回保留了原本
+     * 虽然报头信息是没有大小写之分，但是使用 `getHeaders()` 会返回保留了原本
      * 大小写形式的内容。
      *
-     * @return string[][] 返回一个两维数组，第一维数组的「键」 **必须** 为单条头信息的
+     * @return string[][] 返回一个两维数组，第一维数组的「键」 **必须** 为单条报头信息的
      *     名称，对应的是由字串组成的数组，请注意，对应的「值」 **必须** 是数组形式的。
      */
     public function getHeaders();
 
     /**
-     * 检查是否头信息中包含有此名称的值，不区分大小写
+     * 检查是否报头信息中包含有此名称的值，不区分大小写
      *
-     * @param string $name 不区分大小写的头信息名称
+     * @param string $name 不区分大小写的报头信息名称
      * @return bool 找到返回 true，未找到返回 false
      */
     public function hasHeader($name);
 
     /**
-     * 根据给定的名称，获取一条头信息，不区分大小写，以数组形式返回
+     * 根据给定的名称，获取一条报头信息，不区分大小写，以数组形式返回
      *
-     * 此方法以数组形式返回对应名称的头信息。
+     * 此方法以数组形式返回对应名称的报头信息。
      *
-     * 如果没有对应的头信息，**必须** 返回一个空数组。
+     * 如果没有对应的报头信息，**必须** 返回一个空数组。
      *
-     * @param string $name 不区分大小写的头部字段名称。
-     * @return string[] 返回头信息中，对应名称的，由字符串组成的数组值，如果没有对应
+     * @param string $name 不区分大小写的报头字段名称。
+     * @return string[] 返回报头信息中，对应名称的，由字符串组成的数组值，如果没有对应
      * 	的内容，**必须** 返回空数组。
      */
     public function getHeader($name);
 
     /**
-     * 根据给定的名称，获取一条头信息，不区分大小写，以逗号分隔的形式返回
+     * 根据给定的名称，获取一条报头信息，不区分大小写，以逗号分隔的形式返回
      * 
-     * 此方法返回所有对应的头信息，并将其使用逗号分隔的方法拼接起来。
+     * 此方法返回所有对应的报头信息，并将其使用逗号分隔的方法拼接起来。
      *
-     * 注意：不是所有的头信息都可使用逗号分隔的方法来拼接，对于那些头信息，请使用
+     * 注意：不是所有的报头信息都可使用逗号分隔的方法来拼接，对于那些报头信息，请使用
      * `getHeader()` 方法来获取。
      * 
-     * 如果没有对应的头信息，此方法 **必须** 返回一个空字符串。
+     * 如果没有对应的报头信息，此方法 **必须** 返回一个空字符串。
      *
-     * @param string $name 不区分大小写的头部字段名称。
-     * @return string 返回头信息中，对应名称的，由逗号分隔组成的字串，如果没有对应
+     * @param string $name 不区分大小写的报头字段名称。
+     * @return string 返回报头信息中，对应名称的，由逗号分隔组成的字串，如果没有对应
      * 	的内容，**必须** 返回空字符串。
      */
     public function getHeaderLine($name);
 
     /**
-     * 返回指定头信息「键/值」对的消息实例。
+     * 返回替换指定报头信息「键/值」对的消息实例。
      *
-     * 虽然头信息是不区分大小写的，但是此方法必须保留其传参时的大小写状态，并能够在
+     * 虽然报头信息是不区分大小写的，但是此方法必须保留其传参时的大小写状态，并能够在
      * 调用 `getHeaders()` 的时候被取出。
      *
      * 此方法在实现的时候，**必须** 保留原有的不可修改的 HTTP 消息对象，然后返回
-     * 一个新的带有传参进去头信息的实例
+     * 一个更新后带有传参进去报头信息的实例
      *
-     * @param string $name Case-insensitive header field name.
-     * @param string|string[] $value Header value(s).
+     * @param string $name 不区分大小写的报头字段名称。
+     * @param string|string[] $value 报头信息或报头信息数组。
      * @return self
-     * @throws \InvalidArgumentException for invalid header names or values.
+     * @throws \InvalidArgumentException 无效的报头字段或报头信息时抛出
      */
     public function withHeader($name, $value);
 
     /**
-     * 返回一个头信息增量的 HTTP 消息实例。
+     * 返回一个报头信息增量的 HTTP 消息实例。
      *
-     * 原有的头信息会被保留，新的值会作为增量加上，如果头信息不存在的话，会被加上。
+     * 原有的报头信息会被保留，新的值会作为增量加上，如果报头信息不存在的话，字段会被加上。
      *
      * 此方法在实现的时候，**必须** 保留原有的不可修改的 HTTP 消息对象，然后返回
      * 一个新的修改过的 HTTP 消息实例。
      *
-     * @param string $name 不区分大小写的头部字段名称。
-     * @param string|string[] $value 头信息对应的值。
+     * @param string $name 不区分大小写的报头字段名称。
+     * @param string|string[] $value 报头信息或报头信息数组。
      * @return self
-     * @throws \InvalidArgumentException 头信息字段名称非法时会被抛出。
-     * @throws \InvalidArgumentException 头信息的值非法的时候，会被抛出。
+     * @throws \InvalidArgumentException 报头字段名称非法时会被抛出。
+     * @throws \InvalidArgumentException 报头头信息的值非法的时候会被抛出。
      */
     public function withAddedHeader($name, $value);
 
     /**
-     * 返回被移除掉指定头信息的 HTTP 消息实例。
+     * 返回被移除掉指定报头信息的 HTTP 消息实例。
      *
-     * 头信息字段在解析的时候，**必须** 保证是不区分大小写的。
+     * 报头信息字段在解析的时候，**必须** 保证是不区分大小写的。
      *
      * 此方法在实现的时候，**必须** 保留原有的不可修改的 HTTP 消息对象，然后返回
      * 一个新的修改过的 HTTP 消息实例。
@@ -621,16 +621,16 @@ interface MessageInterface
     public function getBody();
 
     /**
-     * 返回拼接了内容的 HTTP 消息实例。
+     * 返回指定内容的 HTTP 消息实例。
      *
-     * 内容 **必须** 是 StreamInterface 接口的实例。
+     * 内容 **必须** 是 `StreamInterface` 接口的实例。
      *
      * 此方法在实现的时候，**必须** 保留原有的不可修改的 HTTP 消息对象，然后返回
      * 一个新的修改过的 HTTP 消息实例。
      *
      * @param StreamInterface $body 数据流形式的内容。
      * @return self
-     * @throws \InvalidArgumentException 当消息内容不正确的时候。
+     * @throws \InvalidArgumentException 当消息内容不正确的时候抛出。
      */
     public function withBody(StreamInterface $body);
 }
@@ -643,29 +643,33 @@ interface MessageInterface
 namespace Psr\Http\Message;
 
 /**
- * 代表客户端请求的 HTTP 消息对象。
+ * 代表客户端向服务器发起请求的 HTTP 消息对象。
  *
- * 根据规范，每一个 HTTP 请求都包含以下信息：
+ * 根据 HTTP 规范，此接口包含以下属性：
  *
- * - HTTP 协议版本号 (Protocol version)
- * - HTTP 请求方法 (HTTP method)
+ * - HTTP 协议版本号
+ * - HTTP 请求方法
  * - URI
- * - 头信息 (Headers)
- * - 消息内容 (Message body)
+ * - 报头信息
+ * - 消息内容
  *
- * 在构造 HTTP 请求对象的时候，实现类库 **必须** 从给出的 URI 中去提取 HOST 信息。
+ * 在构造 HTTP 请求对象的时候，如果没有提供 Host 信息，
+ * 实现类库 **必须** 从给出的 URI 中去提取 Host 信息。
  *
  * HTTP 请求是被视为无法修改的，所有能修改状态的方法，都 **必须** 有一套机制，在内部保
- * 持好原有的内容，然后把修改状态后的，新的 HTTP 请求实例返回。
+ * 持好原有的内容，然后把修改状态后的新的 HTTP 请求实例返回。
  */
 interface RequestInterface extends MessageInterface
 {
     /**
-     * 获取消息请求的目标。
+     * 获取消息的请求目标。
+     * 
+     * 获取消息的请求目标的使用场景，可能是在客户端，也可能是在服务器端，也可能是在指定信息的时候
+     * （参阅下方的 `withRequestTarget()`）。
+     * 
+     * 在大部分情况下，此方法会返回组合 URI 的原始形式，除非被指定过（参阅下方的 `withRequestTarget()`）。
      *
-     * 在大部分情况下，此方法会返回完整的 URI，除非 `withRequestTarget()` 被设置过。
-     *
-     * 如果没有提供 URI，并且没有提供任何的请求目标，此方法 **必须** 返回 "/"。
+     * 如果没有可用的 URI，并且没有设置过请求目标，此方法 **必须** 返回 「/」。
      *
      * @return string
      */
@@ -673,11 +677,15 @@ interface RequestInterface extends MessageInterface
 
     /**
      * 返回一个指定目标的请求实例。
+     * 
+     * 如果请求需要非原始形式的请求目标——例如指定绝对形式、认证形式或星号形式——则此方法
+     * 可用于创建指定请求目标的实例。
      *
      * 此方法在实现的时候，**必须** 保留原有的不可修改的 HTTP 请求实例，然后返回
      * 一个新的修改过的 HTTP 请求实例。
      *
-     * @see 关于请求目标的各种允许的格式，请见 http://tools.ietf.org/html/rfc7230#section-2.7 
+     * @see [http://tools.ietf.org/html/rfc7230#section-2.7](http://tools.ietf.org/html/rfc7230#section-2.7) 
+     * （关于请求目标的各种允许的格式）
      * 
      * @param mixed $requestTarget
      * @return self
@@ -694,7 +702,7 @@ interface RequestInterface extends MessageInterface
     /**
      * 返回更改了请求方法的消息实例。
      *
-     * 虽然，在大部分情况下，HTTP 请求方法都是使用大写字母来标示的，但是，实现类库 **一定不可**
+     * 虽然，在大部分情况下，HTTP 请求方法都是使用大写字母来标示的，但是，实现类库 **不应该**
      * 修改用户传参的大小格式。
      * 
      * 此方法在实现的时候，**必须** 保留原有的不可修改的 HTTP 请求实例，然后返回
@@ -709,28 +717,33 @@ interface RequestInterface extends MessageInterface
     /**
      * 获取 URI 实例。
      *
-     * 此方法必须返回 `UriInterface` 的 URI 实例。
+     * 此方法 **必须** 返回 `UriInterface` 的 URI 实例。
      *
      * @see http://tools.ietf.org/html/rfc3986#section-4.3
-     * @return UriInterface 返回与当前请求相关 `UriInterface` 类型的 URI 实例。
+     * @return UriInterface 返回与当前请求相关的 `UriInterface` 类型的 URI 实例。
      */
     public function getUri();
 
     /**
      * 返回修改了 URI 的消息实例。
      *
-     * 当传入的 `URI` 包含有 `HOST` 信息时，**必须** 更新 `HOST` 头信息，如果 `URI` 
-     * 实例没有附带 `HOST` 信息，任何之前存在的 `HOST` 信息 **必须** 作为候补，应用
+     * 当传入的 URI 包含有 HOST 信息时，此方法 **必须** 更新 HOST 信息。如果 URI 
+     * 实例没有附带 HOST 信息，任何之前存在的 HOST 信息 **必须** 作为候补，应用
      * 更改到返回的消息实例里。
      * 
      * 你可以通过传入第二个参数来，来干预方法的处理，当 `$preserveHost` 设置为 `true` 
-     * 的时候，会保留原来的 `HOST` 信息。
+     * 的时候，会保留原来的 HOST 信息。当 `$preserveHost` 设置为 `true` 时，此方法
+     * 会如下处理 HOST 信息：
+     * 
+     * - 如果 HOST 信息不存在或为空，并且新 URI 包含 HOST 信息，则此方法 **必须** 更新返回请求中的 HOST 信息。
+     * - 如果 HOST 信息不存在或为空，并且新 URI 不包含 HOST 信息，则此方法 **不得** 更新返回请求中的 HOST 信息。
+     * - 如果HOST 信息存在且不为空，则此方法 **不得** 更新返回请求中的 HOST 信息。
      * 
      * 此方法在实现的时候，**必须** 保留原有的不可修改的 HTTP 请求实例，然后返回
      * 一个新的修改过的 HTTP 请求实例。
      *
      * @see http://tools.ietf.org/html/rfc3986#section-4.3
-     * @param UriInterface $uri `UriInterface` 类型的 URI 实例
+     * @param UriInterface $uri `UriInterface` 新的 URI 实例
      * @param bool $preserveHost 是否保留原有的 HOST 头信息
      * @return self
      */
@@ -745,38 +758,31 @@ interface RequestInterface extends MessageInterface
 namespace Psr\Http\Message;
 
 /**
- * Representation of an incoming, server-side HTTP request.
+ * 表示服务器端接收到的 HTTP 请求。
  *
- * Per the HTTP specification, this interface includes properties for
- * each of the following:
+ * 根据 HTTP 规范，此接口包含以下属性：
  *
- * - Protocol version
- * - HTTP method
+ * - HTTP 协议版本号
+ * - HTTP 请求方法
  * - URI
- * - Headers
- * - Message body
+ * - 报头信息
+ * - 消息内容
  *
- * Additionally, it encapsulates all data as it has arrived to the
- * application from the CGI and/or PHP environment, including:
+ * 此外，它封闭了从 CGI 和/或 PHP 环境变量，包括：
  *
- * - The values represented in $_SERVER.
- * - Any cookies provided (generally via $_COOKIE)
- * - Query string arguments (generally via $_GET, or as parsed via parse_str())
- * - Upload files, if any (as represented by $_FILES)
- * - Deserialized body parameters (generally from $_POST)
+ * - `$_SERVER` 中表示的值。
+ * - 提供的任意 Cookie 信息（通常通过 `$_COOKIE` 获取）
+ * - 查询字符串参数（通常通过 `$_GET` 获取，或者通过 `parse_str()` 解析）
+ * - 如果存在的话，上传文件的信息（通常通过 `$_FILES` 获取）
+ * - 反序列化的消息体参数（通常来自于 `$_POST`）
  *
- * $_SERVER values MUST be treated as immutable, as they represent application
- * state at the time of request; as such, no methods are provided to allow
- * modification of those values. The other values provide such methods, as they
- * can be restored from $_SERVER or the request body, and may need treatment
- * during the application (e.g., body parameters may be deserialized based on
- * content type).
+ * `$_SERVER` 的值 **必须** 被视为不可变的，因为代表了请求时应用程序的状态；因此，没有允许修改的方法。
+ * 其他值则提供了修改的方法，因为可以从 `$_SERVER` 或请求体中恢复，并且可能在应用程序中被处理
+ * （比如可能根据内容类型对消息体参数进行反序列化）。
  *
- * Additionally, this interface recognizes the utility of introspecting a
- * request to derive and match additional parameters (e.g., via URI path
- * matching, decrypting cookie values, deserializing non-form-encoded body
- * content, matching authorization headers to users, etc). These parameters
- * are stored in an "attributes" property.
+ * 此外，这个接口要识别请求的扩展信息和匹配其他的参数。
+ * （例如，通过 URI 进行路径匹配，解析 Cookie 值，反序列化非表单编码的消息体，报头中的用户名进行匹配认证）
+ * 这些参数存储在「attributes」中。
  *
  * HTTP 请求是被视为无法修改的，所有能修改状态的方法，都 **必须** 有一套机制，在内部保
  * 持好原有的内容，然后把修改状态后的，新的 HTTP 请求实例返回。
@@ -784,212 +790,176 @@ namespace Psr\Http\Message;
 interface ServerRequestInterface extends RequestInterface
 {
     /**
-     * Retrieve server parameters.
+     * 返回服务器参数。
      *
-     * Retrieves data related to the incoming request environment,
-     * typically derived from PHP's $_SERVER superglobal. The data IS NOT
-     * REQUIRED to originate from $_SERVER.
+     * 返回与请求环境相关的数据，通常从 PHP 的 `$_SERVER` 超全局变量中获取，但不是必然的。
      *
      * @return array
      */
     public function getServerParams();
 
     /**
-     * Retrieve cookies.
+     * 获取 Cookie 数据。
      *
-     * Retrieves cookies sent by the client to the server.
+     * 获取从客户端发往服务器的 Cookie 数据。
      *
-     * The data MUST be compatible with the structure of the $_COOKIE
-     * superglobal.
+     * 这个数据的结构 **必须** 和超全局变量 `$_COOKIE` 兼容。
      *
      * @return array
      */
     public function getCookieParams();
 
     /**
-     * Return an instance with the specified cookies.
+     * 返回具体指定 Cookie 的实例。
      *
-     * The data IS NOT REQUIRED to come from the $_COOKIE superglobal, but MUST
-     * be compatible with the structure of $_COOKIE. Typically, this data will
-     * be injected at instantiation.
+     * 这个数据不是一定要来源于 `$_COOKIE`，但是 **必须** 与之结构兼容。通常在实例化时注入。
      *
-     * This method MUST NOT update the related Cookie header of the request
-     * instance, nor related values in the server params.
+     * 这个方法 **禁止** 更新实例中的 Cookie 报头和服务器参数中的相关值。
      *
      * 此方法在实现的时候，**必须** 保留原有的不可修改的 HTTP 消息实例，然后返回
      * 一个新的修改过的 HTTP 消息实例。
      * 
-     * @param array $cookies Array of key/value pairs representing cookies.
+     * @param array $cookies 表示 Cookie 的键值对。
      * @return self
      */
     public function withCookieParams(array $cookies);
 
     /**
-     * Retrieve query string arguments.
+     * 获取查询字符串参数。
      *
-     * Retrieves the deserialized query string arguments, if any.
+     * 如果可以的话，返回反序列化的查询字符串参数。
      *
-     * Note: the query params might not be in sync with the URI or server
-     * params. If you need to ensure you are only getting the original
-     * values, you may need to parse the query string from `getUri()->getQuery()`
-     * or from the `QUERY_STRING` server param.
+     * 注意：查询参数可能与 URI 或服务器参数不同步。如果你需要确保只获取原始值，则可能需要调用
+     * `getUri()->getQuery()` 或服务器参数中的 `QUERY_STRING` 获取原始的查询字符串并自行解析。
      *
      * @return array
      */
     public function getQueryParams();
 
     /**
-     * Return an instance with the specified query string arguments.
+     * 返回具体指定查询字符串参数的实例。
      *
-     * These values SHOULD remain immutable over the course of the incoming
-     * request. They MAY be injected during instantiation, such as from PHP's
-     * $_GET superglobal, or MAY be derived from some other value such as the
-     * URI. In cases where the arguments are parsed from the URI, the data
-     * MUST be compatible with what PHP's parse_str() would return for
-     * purposes of how duplicate query parameters are handled, and how nested
-     * sets are handled.
+     * 这些值 **应该** 在传入请求的闭包中保持不变。它们 **可能** 在实例化的时候注入，
+     * 例如来自 `$_GET` 或者其他一些值（例如 URI）中得到。如果是通过解析 URI 获取，则
+     * 数据结构必须与 `parse_str()` 返回的内容兼容，以便处理查询参数、嵌套的代码可以复用。
      *
-     * Setting query string arguments MUST NOT change the URI stored by the
-     * request, nor the values in the server params.
-     *
+     * 设置查询字符串参数 **不得** 更改存储的 URI 和服务器参数中的值。
+     * 
      * 此方法在实现的时候，**必须** 保留原有的不可修改的 HTTP 消息实例，然后返回
      * 一个新的修改过的 HTTP 消息实例。
      *
-     * @param array $query Array of query string arguments, typically from
-     *     $_GET.
+     * @param array $query 查询字符串参数数组，通常来源于 `$_GET`。
      * @return self
      */
     public function withQueryParams(array $query);
 
     /**
-     * Retrieve normalized file upload data.
+     * 获取规范化的上传文件数据。
      *
-     * This method returns upload metadata in a normalized tree, with each leaf
-     * an instance of Psr\Http\Message\UploadedFileInterface.
+     * 这个方法会规范化返回的上传文件元数据树结构，每个叶子结点都是 `Psr\Http\Message\UploadedFileInterface` 实例。
      *
-     * These values MAY be prepared from $_FILES or the message body during
-     * instantiation, or MAY be injected via withUploadedFiles().
+     * 这些值 **可能** 在实例化的时候从 `$_FILES` 或消息体中获取，或者通过 `withUploadedFiles()` 获取。
      *
-     * @return array An array tree of UploadedFileInterface instances; an empty
-     *     array MUST be returned if no data is present.
+     * @return array `UploadedFileInterface` 的实例数组；如果没有数据则必须返回一个空数组。
      */
     public function getUploadedFiles();
 
     /**
-     * Create a new instance with the specified uploaded files.
+     * 返回使用指定的上传文件数据的新实例。
      *
      * 此方法在实现的时候，**必须** 保留原有的不可修改的 HTTP 消息实例，然后返回
      * 一个新的修改过的 HTTP 消息实例。
      *
-     * @param array An array tree of UploadedFileInterface instances.
+     * @param array `UploadedFileInterface` 实例的树结构，类似于 `getUploadedFiles()` 的返回值。
      * @return self
-     * @throws \InvalidArgumentException if an invalid structure is provided.
+     * @throws \InvalidArgumentException 如果提供无效的结构时抛出。
      */
     public function withUploadedFiles(array $uploadedFiles);
 
     /**
-     * Retrieve any parameters provided in the request body.
+     * 获取请求消息体中的参数。
      *
-     * If the request Content-Type is either application/x-www-form-urlencoded
-     * or multipart/form-data, and the request method is POST, this method MUST
-     * return the contents of $_POST.
+     * 如果请求的 Content-Type 是 application/x-www-form-urlencoded 或 multipart/form-data 且请求方法是 POST，
+     * 则此方法 **必须** 返回 $_POST 的内容。
      *
-     * Otherwise, this method may return any results of deserializing
-     * the request body content; as parsing returns structured content, the
-     * potential types MUST be arrays or objects only. A null value indicates
-     * the absence of body content.
+     * 如果是其他情况，此方法可能返回反序列化请求正文内容的任何结果；当解析返回返回的结构化内容时，潜在的类型 **必须**
+     * 只能是数组或 `object` 类型。`null` 表示没有消息体内容。
      *
-     * @return null|array|object The deserialized body parameters, if any.
-     *     These will typically be an array or object.
+     * @return null|array|object 如果存在则返回反序列化消息体参数。一般是一个数组或 `object`。
      */
     public function getParsedBody();
 
     /**
-     * Return an instance with the specified body parameters.
+     * 返回具有指定消息体参数的实例。
      *
-     * These MAY be injected during instantiation.
+     * **可能** 在实例化时注入。
      *
-     * If the request Content-Type is either application/x-www-form-urlencoded
-     * or multipart/form-data, and the request method is POST, use this method
-     * ONLY to inject the contents of $_POST.
+     * 如果请求的 Content-Type 是 application/x-www-form-urlencoded 或 multipart/form-data 且请求方法是 POST，
+     * 则方法的参数只能是 $_POST。
      *
-     * The data IS NOT REQUIRED to come from $_POST, but MUST be the results of
-     * deserializing the request body content. Deserialization/parsing returns
-     * structured data, and, as such, this method ONLY accepts arrays or objects,
-     * or a null value if nothing was available to parse.
+     * 数据不一定要来自 $_POST，但是 **必须** 是反序列化请求正文内容的结果。由于需要反序列化/解析返回的结构化数据，
+     * 所以这个方法只接受数组、 `object` 类型和 `null`（如果没有可用的数据解析）。
      *
-     * As an example, if content negotiation determines that the request data
-     * is a JSON payload, this method could be used to create a request
-     * instance with the deserialized parameters.
+     * 例如，如果确定请求数据是一个 JSON，可以使用此方法创建具有反序列化参数的请求实例。
      *
      * 此方法在实现的时候，**必须** 保留原有的不可修改的 HTTP 消息实例，然后返回
      * 一个新的修改过的 HTTP 消息实例。
      *
-     * @param null|array|object $data The deserialized body data. This will
-     *     typically be in an array or object.
+     * @param null|array|object $data 反序列化的消息体数据，通常是数组或 `object`。
      * @return self
-     * @throws \InvalidArgumentException if an unsupported argument type is
-     *     provided.
+     * @throws \InvalidArgumentException 如果提供的数据类型不支持。
      */
     public function withParsedBody($data);
 
     /**
-     * Retrieve attributes derived from the request.
+     * 获取从请求派生的属性。
      *
-     * The request "attributes" may be used to allow injection of any
-     * parameters derived from the request: e.g., the results of path
-     * match operations; the results of decrypting cookies; the results of
-     * deserializing non-form-encoded message bodies; etc. Attributes
-     * will be application and request specific, and CAN be mutable.
+     * 请求「attributes」可用于从请求导出的任意参数：比如路径匹配操作的结果；解密 Cookie 的结果；
+     * 反序列化非表单编码的消息体的结果；属性将是应用程序与请求特定的，并且可以是可变的。
      *
-     * @return mixed[] Attributes derived from the request.
+     * @return mixed[] 从请求派生的属性。
      */
     public function getAttributes();
 
     /**
-     * Retrieve a single derived request attribute.
+     * 获取单个派生的请求属性。
      *
-     * Retrieves a single derived request attribute as described in
-     * getAttributes(). If the attribute has not been previously set, returns
-     * the default value as provided.
+     * 获取 getAttributes() 中声明的某一个属性，如果不存在则返回提供的默认值。
      *
-     * This method obviates the need for a hasAttribute() method, as it allows
-     * specifying a default value to return if the attribute is not found.
+     * 这个方法不需要 hasAttribute 方法，因为允许在找不到指定属性的时候返回默认值。
      *
      * @see getAttributes()
-     * @param string $name The attribute name.
-     * @param mixed $default Default value to return if the attribute does not exist.
+     * @param string $name 属性名称。
+     * @param mixed $default 如果属性不存在时返回的默认值。
      * @return mixed
      */
     public function getAttribute($name, $default = null);
 
     /**
-     * Return an instance with the specified derived request attribute.
+     * 返回具有指定派生属性的实例。
      *
-     * This method allows setting a single derived request attribute as
-     * described in getAttributes().
+     * 此方法允许设置 getAttributes() 中声明的单个派生的请求属性。
      *
      * 此方法在实现的时候，**必须** 保留原有的不可修改的 HTTP 消息实例，然后返回
      * 一个新的修改过的 HTTP 消息实例。
      *
      * @see getAttributes()
-     * @param string $name The attribute name.
-     * @param mixed $value The value of the attribute.
+     * @param string $name 属性名。
+     * @param mixed $value 属性值。
      * @return self
      */
     public function withAttribute($name, $value);
 
     /**
-     * Return an instance that removes the specified derived request attribute.
+     * 返回移除指定属性的实例。
      *
-     * This method allows removing a single derived request attribute as
-     * described in getAttributes().
+     * 此方法允许移除 getAttributes() 中声明的单个派生的请求属性。
      *
      * 此方法在实现的时候，**必须** 保留原有的不可修改的 HTTP 消息实例，然后返回
      * 一个新的修改过的 HTTP 消息实例。
      *
      * @see getAttributes()
-     * @param string $name The attribute name.
+     * @param string $name 属性名。
      * @return self
      */
     public function withoutAttribute($name);
