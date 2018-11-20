@@ -973,19 +973,14 @@ interface ServerRequestInterface extends RequestInterface
 namespace Psr\Http\Message;
 
 /**
- * Representation of an outgoing, server-side response.
+ * 表示服务器返回的响应消息。
  *
- * Per the HTTP specification, this interface includes properties for
- * each of the following:
+ * 根据 HTTP 规范，此接口包含以下各项的属性：
  *
- * - Protocol version
- * - Status code and reason phrase
- * - Headers
- * - Message body
- *
- * Responses are considered immutable; all methods that might change state MUST
- * be implemented such that they retain the internal state of the current
- * message and return an instance that contains the changed state.
+ * - 协议版本
+ * - 状态码和原因短语
+ * - 报头
+ * - 消息体
  * 
  * HTTP 响应是被视为无法修改的，所有能修改状态的方法，都 **必须** 有一套机制，在内部保
  * 持好原有的内容，然后把修改状态后的，新的 HTTP 响应实例返回。
@@ -993,48 +988,40 @@ namespace Psr\Http\Message;
 interface ResponseInterface extends MessageInterface
 {
     /**
-     * Gets the response status code.
+     * 获取响应状态码。
      *
-     * The status code is a 3-digit integer result code of the server's attempt
-     * to understand and satisfy the request.
+     * 状态码是一个三位整数，用于理解请求。
      *
-     * @return int Status code.
+     * @return int 状态码。
      */
     public function getStatusCode();
 
     /**
-     * Return an instance with the specified status code and, optionally, reason phrase.
+     * 返回具有指定状态码和原因短语（可选）的实例。
      *
-     * If no reason phrase is specified, implementations MAY choose to default
-     * to the RFC 7231 or IANA recommended reason phrase for the response's
-     * status code.
+     * 如果未指定原因短语，实现代码 **可能** 选择 RFC7231 或 IANA 为状态码推荐的原因短语。
      *
      * 此方法在实现的时候，**必须** 保留原有的不可修改的 HTTP 消息实例，然后返回
      * 一个新的修改过的 HTTP 消息实例。
      *
      * @see http://tools.ietf.org/html/rfc7231#section-6
      * @see http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
-     * @param int $code The 3-digit integer result code to set.
-     * @param string $reasonPhrase The reason phrase to use with the
-     *     provided status code; if none is provided, implementations MAY
-     *     use the defaults as suggested in the HTTP specification.
+     * @param int $code 三位整数的状态码。
+     * @param string $reasonPhrase 为状态码提供的原因短语；如果未提供，实现代码可以使用 HTTP 规范建议的默认代码。
      * @return self
-     * @throws \InvalidArgumentException For invalid status code arguments.
+     * @throws \InvalidArgumentException 如果传入无效的状态码，则抛出。
      */
     public function withStatus($code, $reasonPhrase = '');
 
     /**
-     * Gets the response reason phrase associated with the status code.
+     * 获取与响应状态码关联的响应原因短语。
      *
-     * Because a reason phrase is not a required element in a response
-     * status line, the reason phrase value MAY be empty. Implementations MAY
-     * choose to return the default RFC 7231 recommended reason phrase (or those
-     * listed in the IANA HTTP Status Code Registry) for the response's
-     * status code.
+     * 因为原因短语不是响应状态行中的必需元素，所以原因短语 **可能** 是空。
+     * 实现代码可以选择返回响应的状态代码的默认 RFC 7231 推荐原因短语（或 IANA HTTP 状态码注册表中列出的原因短语）。
      *
      * @see http://tools.ietf.org/html/rfc7231#section-6
      * @see http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
-     * @return string Reason phrase; must return an empty string if none present.
+     * @return string 原因短语；如果不存在，则 **必须** 返回空字符串。
      */
     public function getReasonPhrase();
 }
@@ -1047,24 +1034,20 @@ interface ResponseInterface extends MessageInterface
 namespace Psr\Http\Message;
 
 /**
- * Describes a data stream.
+ * 描述数据流。
  *
- * Typically, an instance will wrap a PHP stream; this interface provides
- * a wrapper around the most common operations, including serialization of
- * the entire stream to a string.
+ * 通常，实例将包装PHP流; 此接口提供了最常见操作的包装，包括将整个流序列化为字符串。
  */
 interface StreamInterface
 {
     /**
-     * Reads all data from the stream into a string, from the beginning to end.
+     * 从头到尾将流中的所有数据读取到字符串。
      *
-     * This method MUST attempt to seek to the beginning of the stream before
-     * reading data and read the stream until the end is reached.
+     * 这个方法 **必须** 在开始读数据前定位到流的开头，并读取出所有的数据。
      *
-     * Warning: This could attempt to load a large amount of data into memory.
+     * 警告：这可能会尝试将大量数据加载到内存中。
      *
-     * This method MUST NOT raise an exception in order to conform with PHP's
-     * string casting operations.
+     * 这个方法 **不得** 抛出异常以符合 PHP 的字符串转换操作。
      *
      * @see http://php.net/manual/en/language.oop5.magic.php#object.tostring
      * @return string
@@ -1072,131 +1055,125 @@ interface StreamInterface
     public function __toString();
 
     /**
-     * Closes the stream and any underlying resources.
+     * 关闭流和任何底层资源。
      *
      * @return void
      */
     public function close();
 
     /**
-     * Separates any underlying resources from the stream.
+     * 从流中分离任何底层资源。
      *
-     * After the stream has been detached, the stream is in an unusable state.
+     * 分离之后，流处于不可用状态。
      *
-     * @return resource|null Underlying PHP stream, if any
+     * @return resource|null 如果存在的话，返回底层 PHP 流。
      */
     public function detach();
 
     /**
-     * Get the size of the stream if known.
+     * 如果可知，获取流的数据大小。
      *
-     * @return int|null Returns the size in bytes if known, or null if unknown.
+     * @return int|null 如果可知，返回以字节为单位的大小，如果未知返回 `null`。
      */
     public function getSize();
 
     /**
-     * Returns the current position of the file read/write pointer
+     * 返回当前读/写的指针位置。
      *
-     * @return int Position of the file pointer
-     * @throws \RuntimeException on error.
+     * @return int 指针位置。
+     * @throws \RuntimeException 产生错误时抛出。
      */
     public function tell();
 
     /**
-     * Returns true if the stream is at the end of the stream.
+     * 返回是否位于流的末尾。
      *
      * @return bool
      */
     public function eof();
 
     /**
-     * Returns whether or not the stream is seekable.
+     * 返回流是否可随机读取。
      *
      * @return bool
      */
     public function isSeekable();
 
     /**
-     * Seek to a position in the stream.
+     * 定位流中的指定位置。
      *
      * @see http://www.php.net/manual/en/function.fseek.php
-     * @param int $offset Stream offset
-     * @param int $whence Specifies how the cursor position will be calculated
-     *     based on the seek offset. Valid values are identical to the built-in
-     *     PHP $whence values for `fseek()`.  SEEK_SET: Set position equal to
-     *     offset bytes SEEK_CUR: Set position to current location plus offset
-     *     SEEK_END: Set position to end-of-stream plus offset.
-     * @throws \RuntimeException on failure.
+     * @param int $offset 要定位的流的偏移量。
+     * @param int $whence 指定如何根据偏移量计算光标位置。有效值与 PHP 内置函数 `fseek()` 相同。
+     *     SEEK_SET：设定位置等于 $offset 字节。默认。
+     *     SEEK_CUR：设定位置为当前位置加上 $offset。
+     *     SEEK_END：设定位置为文件末尾加上 $offset （要移动到文件尾之前的位置，offset 必须是一个负值）。
+     * @throws \RuntimeException 失败时抛出。
      */
     public function seek($offset, $whence = SEEK_SET);
 
     /**
-     * Seek to the beginning of the stream.
+     * 定位流的起始位置。
      *
-     * If the stream is not seekable, this method will raise an exception;
-     * otherwise, it will perform a seek(0).
+     * 如果流不可以随机访问，此方法将引发异常；否则将执行 seek(0)。
      *
      * @see seek()
      * @see http://www.php.net/manual/en/function.fseek.php
-     * @throws \RuntimeException on failure.
+     * @throws \RuntimeException 失败时抛出。
      */
     public function rewind();
 
     /**
-     * Returns whether or not the stream is writable.
+     * 返回流是否可写。
      *
      * @return bool
      */
     public function isWritable();
 
     /**
-     * Write data to the stream.
+     * 向流中写数据。
      *
-     * @param string $string The string that is to be written.
-     * @return int Returns the number of bytes written to the stream.
-     * @throws \RuntimeException on failure.
+     * @param string $string 要写入流的数据。
+     * @return int 返回写入流的字节数。
+     * @throws \RuntimeException 失败时抛出。
      */
     public function write($string);
 
     /**
-     * Returns whether or not the stream is readable.
+     * 返回流是否可读。
      *
      * @return bool
      */
     public function isReadable();
 
     /**
-     * Read data from the stream.
+     * 从流中读取数据。
      *
-     * @param int $length Read up to $length bytes from the object and return
-     *     them. Fewer than $length bytes may be returned if underlying stream
-     *     call returns fewer bytes.
-     * @return string Returns the data read from the stream, or an empty string
-     *     if no bytes are available.
-     * @throws \RuntimeException if an error occurs.
+     * @param int $length 从流中读取最多 $length 字节的数据并返回。如果数据不足，则可能返回少于
+     *     $length 字节的数据。
+     * @return string 返回从流中读取的数据，如果没有可用的数据则返回空字符串。
+     * @throws \RuntimeException 失败时抛出。
      */
     public function read($length);
 
     /**
-     * Returns the remaining contents in a string
+     * 返回字符串中的剩余内容。
      *
      * @return string
-     * @throws \RuntimeException if unable to read.
-     * @throws \RuntimeException if error occurs while reading.
+     * @throws \RuntimeException 如果无法读取则抛出异常。
+     * @throws \RuntimeException 如果在读取时发生错误则抛出异常。
      */
     public function getContents();
 
     /**
-     * Get stream metadata as an associative array or retrieve a specific key.
+     * 获取流中的元数据作为关联数组，或者检索指定的键。
      *
-     * The keys returned are identical to the keys returned from PHP's
-     * stream_get_meta_data() function.
+     * 返回的键与从 PHP 的 stream_get_meta_data() 函数返回的键相同。
      *
      * @see http://php.net/manual/en/function.stream-get-meta-data.php
-     * @param string $key Specific metadata to retrieve.
-     * @return array|mixed|null Returns an associative array if no key is
-     *     provided. Returns a specific key value if a key is provided and the
-     *     value is found, or null if the key is not found.
+     * @param string $key 要检索的特定元数据。
+     * @return array|mixed|null 如果没有键，则返回关联数组。如果提供了键并且找到值，
+     *     则返回特定键值；如果未找到键，则返回 null。
      */
     public function getMetadata($key = null);
 }
@@ -1218,7 +1195,9 @@ namespace Psr\Http\Message;
  * 此接口的实例化对象被视为无法修改的，所有能修改状态的方法，都 **必须** 有一套机制，在内部保
  * 持好原有的内容，然后把修改状态后的，新的实例返回。
  *
- * @see http://tools.ietf.org/html/rfc3986 (URI 通用标准规范)
+ * 通常，HOST 信息也将出现在请求消息中。对于服务器端的请求，通常可以在服务器参数中发现此信息。
+ * 
+ * @see [URI 通用标准规范](http://tools.ietf.org/html/rfc3986)
  */
 interface UriInterface
 {
@@ -1227,30 +1206,30 @@ interface UriInterface
      *
      * 如果不存在 Scheme，此方法 **必须** 返回空字符串。
      *
-     * 返回的数据 **必须** 是小写字母，遵照  RFC 3986 规范 3.1 章节。
+     * 根据 RFC 3986 规范 3.1 章节，返回的数据 **必须** 是小写字母。
      *
-     * 最后部分的 ":" 字串不属于 Scheme，**一定不可** 作为返回数据的一部分。
+     * 最后部分的「:」字串不属于 Scheme，**不得** 作为返回数据的一部分。
      *
      * @see https://tools.ietf.org/html/rfc3986#section-3.1
-     * @return string URI scheme 的值
+     * @return string URI Ccheme 的值。
      */
     public function getScheme();
 
     /**
-     * 返回 URI 授权信息。
+     * 返回 URI 认证信息。
      *
-     * 如果没有 URI 信息的话，**必须** 返回一个空数组。
+     * 如果没有 URI 认证信息的话，**必须** 返回一个空字符串。
      *
-     * URI 的授权信息语法是：
+     * URI 的认证信息语法是：
      *
      * <pre>
      * [user-info@]host[:port]
      * </pre>
      *
-     * 如果端口部分没有设置，或者端口不是标准端口，**一定不可** 包含在返回值内。
+     * 如果端口部分没有设置，或者端口不是标准端口，**不应该** 包含在返回值内。
      *
      * @see https://tools.ietf.org/html/rfc3986#section-3.2
-     * @return string URI 授权信息，格式为："[user-info@]host[:port]" 
+     * @return string URI 认证信息，格式为：「[user-info@]host[:port]」。
      */
     public function getAuthority();
 
@@ -1258,251 +1237,218 @@ interface UriInterface
      * 从 URI 中获取用户信息。
      *
      * 如果不存在用户信息，此方法 **必须** 返回一个空字符串。
+     * 
+     * 如果 URI 中存在用户，则返回该值；此外，如果密码也存在，它将附加到用户值，用冒号（「:」）分隔。
      *
-     * 用户信息后面跟着的 "@" 字符，不是用户信息里面的一部分，**一定不可** 在返回值里
-     * 出现。
+     * 用户信息后面跟着的 "@" 字符，不是用户信息里面的一部分，**不得** 在返回值里出现。
      *
      * @return string URI 的用户信息，格式："username[:password]" 
      */
     public function getUserInfo();
 
     /**
-     * 从 URI 信息中获取 HOST 值。
+     * 从 URI 中获取 HOST 信息。
      *
      * 如果 URI 中没有此值，**必须** 返回空字符串。
      *
-     * 返回的数据 **必须** 是小写字母，遵照  RFC 3986 规范 3.2.2 章节。
+     * 根据 RFC 3986 规范 3.2.2 章节，返回的数据 **必须** 是小写字母。
      *
      * @see http://tools.ietf.org/html/rfc3986#section-3.2.2
-     * @return string URI 信息中的 HOST 值。
+     * @return string URI 中的 HOST 信息。
      */
     public function getHost();
 
     /**
-     * 从 URI 信息中获取端口信息。
+     * 从 URI 中获取端口信息。
      *
      * 如果端口信息是与当前 Scheme 的标准端口不匹配的话，就使用整数值的格式返回，如果是一
-     * 样的话，**必须** 返回 `null` 值。
+     * 样的话，**应该** 返回 `null` 值。
      * 
-     * 如果存在端口信息，都是不存在 scheme 信息的话，**必须** 返回 `null` 值。
+     * 如果不存在端口和 Scheme 信息，**必须** 返回 `null` 值。
      * 
-     * 如果不存在端口数据，但是 scheme 数据存在的话，**可以** 返回 scheme 对应的
+     * 如果不存在端口数据，但是存在 Scheme 的话，**可能** 返回 Scheme 对应的
      * 标准端口，但是 **应该** 返回 `null`。
      * 
-     * @return null|int 从 URI 信息中的端口信息。
+     * @return null|int URI 中的端口信息。
      */
     public function getPort();
 
     /**
-     * 从 URI 信息中获取路径。
+     * 从 URI 中获取路径信息。
      *
-     *  The path can either be empty or absolute (starting with a slash) or
-     * rootless (not starting with a slash). Implementations MUST support all
-     * three syntaxes.
+     * 路径可以是空的，或者是绝对的（以斜线「/」开头），或者相对路径（不以斜线开头）。
+     * 实现 **必须** 支持所有三种语法。
      *
-     * Normally, the empty path "" and absolute path "/" are considered equal as
-     * defined in RFC 7230 Section 2.7.3. But this method MUST NOT automatically
-     * do this normalization because in contexts with a trimmed base path, e.g.
-     * the front controller, this difference becomes significant. It's the task
-     * of the user to handle both "" and "/".
+     * 根据 RFC 7230 第 2.7.3 节，通常空路径「」和绝对路径「/」被认为是相同的。
+     * 但是这个方法 **不得** 自动进行这种规范化，因为在具有修剪的基本路径的上下文中，
+     * 例如前端控制器中，这种差异将变得显著。用户的任务就是可以将「」和「/」都处理好。
      *
-     * The value returned MUST be percent-encoded, but MUST NOT double-encode
-     * any characters. To determine what characters to encode, please refer to
-     * RFC 3986, Sections 2 and 3.3.
+     * 返回的值 **必须** 是百分号编码，但 **不得** 对任何字符进行双重编码。
+     * 要确定要编码的字符，请参阅 RFC 3986 第 2 节和第 3.3 节。
      *
-     * As an example, if the value should include a slash ("/") not intended as
-     * delimiter between path segments, that value MUST be passed in encoded
-     * form (e.g., "%2F") to the instance.
+     * 例如，如果值包含斜线（「/」）而不是路径段之间的分隔符，则该值必须以编码形式（例如「%2F」）
+     * 传递给实例。
      *
      * @see https://tools.ietf.org/html/rfc3986#section-2
      * @see https://tools.ietf.org/html/rfc3986#section-3.3
-     * @return string The URI path.
+     * @return string URI 路径信息。
      */
     public function getPath();
 
     /**
-     * Retrieve the query string of the URI.
+     * 获取 URI 中的查询字符串。
      *
-     * If no query string is present, this method MUST return an empty string.
+     * 如果不存在查询字符串，则此方法必须返回空字符串。
      *
-     * The leading "?" character is not part of the query and MUST NOT be
-     * added.
+     * 前导的「?」字符不是查询字符串的一部分，**不得** 添加在返回值中。
      *
-     * The value returned MUST be percent-encoded, but MUST NOT double-encode
-     * any characters. To determine what characters to encode, please refer to
-     * RFC 3986, Sections 2 and 3.4.
+     * 返回的值 **必须** 是百分号编码，但 **不得** 对任何字符进行双重编码。
+     * 要确定要编码的字符，请参阅 RFC 3986 第 2 节和第 3.4 节。
      *
-     * As an example, if a value in a key/value pair of the query string should
-     * include an ampersand ("&") not intended as a delimiter between values,
-     * that value MUST be passed in encoded form (e.g., "%26") to the instance.
+     * 例如，如果查询字符串的键值对中的值包含不做为值之间分隔符的（「&」），则该值必须
+     * 以编码形式传递（例如「%26」）到实例。
      *
      * @see https://tools.ietf.org/html/rfc3986#section-2
      * @see https://tools.ietf.org/html/rfc3986#section-3.4
-     * @return string The URI query string.
+     * @return string URI 中的查询字符串
      */
     public function getQuery();
 
     /**
-     * Retrieve the fragment component of the URI.
+     * 获取 URI 中的片段（Fragment）信息。
      *
-     * If no fragment is present, this method MUST return an empty string.
+     * 如果没有片段信息，此方法 **必须** 返回空字符串。
      *
-     * The leading "#" character is not part of the fragment and MUST NOT be
-     * added.
+     * 前导的「#」字符不是片段的一部分，**不得** 添加在返回值中。
      *
-     * The value returned MUST be percent-encoded, but MUST NOT double-encode
-     * any characters. To determine what characters to encode, please refer to
-     * RFC 3986, Sections 2 and 3.5.
+     * 返回的值 **必须** 是百分号编码，但 **不得** 对任何字符进行双重编码。
+     * 要确定要编码的字符，请参阅 RFC 3986 第 2 节和第 3.5 节。
      *
      * @see https://tools.ietf.org/html/rfc3986#section-2
      * @see https://tools.ietf.org/html/rfc3986#section-3.5
-     * @return string The URI fragment.
+     * @return string URI 中的片段信息。
      */
     public function getFragment();
 
     /**
-     * Return an instance with the specified scheme.
+     * 返回具有指定 Scheme 的实例。
      *
-     * This method MUST retain the state of the current instance, and return
-     * an instance that contains the specified scheme.
+     * 此方法 **必须** 保留当前实例的状态，并返回包含指定 Scheme 的实例。
      *
-     * Implementations MUST support the schemes "http" and "https" case
-     * insensitively, and MAY accommodate other schemes if required.
+     * 实现 **必须** 支持大小写不敏感的「http」和「https」的 Scheme，并且在
+     * 需要的时候 **可能** 支持其他的 Scheme。
      *
-     * An empty scheme is equivalent to removing the scheme.
+     * 空的 Scheme 相当于删除 Scheme。
      *
-     * @param string $scheme The scheme to use with the new instance.
-     * @return self A new instance with the specified scheme.
-     * @throws \InvalidArgumentException for invalid schemes.
-     * @throws \InvalidArgumentException for unsupported schemes.
+     * @param string $scheme 给新实例使用的 Scheme。
+     * @return self 具有指定 Scheme 的新实例。
+     * @throws \InvalidArgumentException 使用无效的 Scheme 时抛出。
+     * @throws \InvalidArgumentException 使用不支持的 Scheme 时抛出。
      */
     public function withScheme($scheme);
 
     /**
-     * Return an instance with the specified user information.
+     * 返回具有指定用户信息的实例。
      *
-     * This method MUST retain the state of the current instance, and return
-     * an instance that contains the specified user information.
+     * 此方法 **必须** 保留当前实例的状态，并返回包含指定用户信息的实例。
      *
-     * Password is optional, but the user information MUST include the
-     * user; an empty string for the user is equivalent to removing user
-     * information.
-     *
-     * @param string $user The user name to use for authority.
-     * @param null|string $password The password associated with $user.
-     * @return self A new instance with the specified user information.
+     * 密码是可选的，但用户信息 **必须** 包括用户；用户信息的空字符串相当于删除用户信息。
+     * 
+     * @param string $user 用于认证的用户名。
+     * @param null|string $password 密码。
+     * @return self 具有指定用户信息的新实例。
      */
     public function withUserInfo($user, $password = null);
 
     /**
-     * Return an instance with the specified host.
+     * 返回具有指定 HOST 信息的实例。
      *
-     * This method MUST retain the state of the current instance, and return
-     * an instance that contains the specified host.
+     * 此方法 **必须** 保留当前实例的状态，并返回包含指定 HOST 信息的实例。
      *
-     * An empty host value is equivalent to removing the host.
+     * 空的 HOST 信息等同于删除 HOST 信息。
      *
-     * @param string $host The hostname to use with the new instance.
-     * @return self A new instance with the specified host.
-     * @throws \InvalidArgumentException for invalid hostnames.
+     * @param string $host 用于新实例的 HOST 信息。
+     * @return self 具有指定 HOST 信息的实例。
+     * @throws \InvalidArgumentException 使用无效的 HOST 信息时抛出。
      */
     public function withHost($host);
 
     /**
-     * Return an instance with the specified port.
+     * 返回具有指定端口的实例。
      *
-     * This method MUST retain the state of the current instance, and return
-     * an instance that contains the specified port.
+     * 此方法 **必须** 保留当前实例的状态，并返回包含指定端口的实例。
      *
-     * Implementations MUST raise an exception for ports outside the
-     * established TCP and UDP port ranges.
+     * 实现 **必须** 为已建立的 TCP 和 UDP 端口范围之外的端口引发异常。
      *
-     * A null value provided for the port is equivalent to removing the port
-     * information.
+     * 为端口提供的空值等同于删除端口信息。
      *
-     * @param null|int $port The port to use with the new instance; a null value
-     *     removes the port information.
-     * @return self A new instance with the specified port.
-     * @throws \InvalidArgumentException for invalid ports.
+     * @param null|int $port 用于新实例的端口；`null` 值将删除端口信息。
+     * @return self 具有指定端口的实例。
+     * @throws \InvalidArgumentException 使用无效端口时抛出异常。
      */
     public function withPort($port);
 
     /**
-     * Return an instance with the specified path.
+     * 返回具有指定路径的实例。
      *
-     * This method MUST retain the state of the current instance, and return
-     * an instance that contains the specified path.
+     * 此方法 **必须** 保留当前实例的状态，并返回包含指定路径的实例。
      *
-     * The path can either be empty or absolute (starting with a slash) or
-     * rootless (not starting with a slash). Implementations MUST support all
-     * three syntaxes.
+     * 路径可以是空的、绝对的（以斜线开头）或者相对路径（不以斜线开头），实现必须支持这三种语法。
      *
-     * If an HTTP path is intended to be host-relative rather than path-relative
-     * then it must begin with a slash ("/"). HTTP paths not starting with a slash
-     * are assumed to be relative to some base path known to the application or
-     * consumer.
+     * 如果 HTTP 路径旨在与 HOST 相对而不是路径相对，，那么它必须以斜线开头。
+     * 假设 HTTP 路径不以斜线开头，对应该程序或开发人员来说，相对于一些已知的路径。
      *
-     * Users can provide both encoded and decoded path characters.
-     * Implementations ensure the correct encoding as outlined in getPath().
+     * 用户可以提供编码和解码的路径字符，要确保实现了 `getPath()` 中描述的正确编码。
      *
-     * @param string $path The path to use with the new instance.
-     * @return self A new instance with the specified path.
-     * @throws \InvalidArgumentException for invalid paths.
+     * @param string $path 用于新实例的路径。
+     * @return self 具有指定路径的实例。
+     * @throws \InvalidArgumentException 使用无效的路径时抛出。
      */
     public function withPath($path);
 
     /**
-     * Return an instance with the specified query string.
+     * 返回具有指定查询字符串的实例。
      *
-     * This method MUST retain the state of the current instance, and return
-     * an instance that contains the specified query string.
+     * 此方法 **必须** 保留当前实例的状态，并返回包含查询字符串的实例。
      *
-     * Users can provide both encoded and decoded query characters.
-     * Implementations ensure the correct encoding as outlined in getQuery().
+     * 用户可以提供编码和解码的查询字符串，要确保实现了 `getQuery()` 中描述的正确编码。
      *
-     * An empty query string value is equivalent to removing the query string.
+     * 空查询字符串值等同于删除查询字符串。
      *
-     * @param string $query The query string to use with the new instance.
-     * @return self A new instance with the specified query string.
-     * @throws \InvalidArgumentException for invalid query strings.
+     * @param string $query 用于新实例的查询字符串。
+     * @return self 具有指定查询字符串的实例。
+     * @throws \InvalidArgumentException 使用无效的查询字符串时抛出。
      */
     public function withQuery($query);
 
     /**
-     * Return an instance with the specified URI fragment.
+     * 返回具有指定 URI 片段（Fragment）的实例。
      *
-     * This method MUST retain the state of the current instance, and return
-     * an instance that contains the specified URI fragment.
+     * 此方法 **必须** 保留当前实例的状态，并返回包含片段的实例。
      *
-     * Users can provide both encoded and decoded fragment characters.
-     * Implementations ensure the correct encoding as outlined in getFragment().
+     * 用户可以提供编码和解码的片段，要确保实现了 `getFragment()` 中描述的正确编码。
      *
-     * An empty fragment value is equivalent to removing the fragment.
+     * 空片段值等同于删除片段。
      *
-     * @param string $fragment The fragment to use with the new instance.
-     * @return self A new instance with the specified fragment.
+     * @param string $fragment 用于新实例的片段。
+     * @return self 具有指定 URI 片段的实例。
      */
     public function withFragment($fragment);
 
     /**
-     * Return the string representation as a URI reference.
+     * 返回字符串表示形式的 URI。
      *
-     * Depending on which components of the URI are present, the resulting
-     * string is either a full URI or relative reference according to RFC 3986,
-     * Section 4.1. The method concatenates the various components of the URI,
-     * using the appropriate delimiters:
+     * 根据 RFC 3986 第 4.1 节，结果字符串是完整的 URI 还是相对引用，取决于 URI 有哪些组件。
+     * 该方法使用适当的分隔符连接 URI 的各个组件：
      *
-     * - If a scheme is present, it MUST be suffixed by ":".
-     * - If an authority is present, it MUST be prefixed by "//".
-     * - The path can be concatenated without delimiters. But there are two
-     *   cases where the path has to be adjusted to make the URI reference
-     *   valid as PHP does not allow to throw an exception in __toString():
-     *     - If the path is rootless and an authority is present, the path MUST
-     *       be prefixed by "/".
-     *     - If the path is starting with more than one "/" and no authority is
-     *       present, the starting slashes MUST be reduced to one.
-     * - If a query is present, it MUST be prefixed by "?".
-     * - If a fragment is present, it MUST be prefixed by "#".
+     * - 如果存在 Scheme 则 **必须** 以「:」为后缀。
+     * - 如果存在认证信息，则必须以「//」作为前缀。
+     * - 路径可以在没有分隔符的情况下连接。但是有两种情况需要调整路径以使 URI 引用有效，因为 PHP
+     *   不允许在 `__toString()` 中引发异常：
+     *     - 如果路径是相对的并且有认证信息，则路径 **必须** 以「/」为前缀。
+     *     - 如果路径以多个「/」开头并且没有认证信息，则起始斜线 **必须** 为一个。
+     * - 如果存在查询字符串，则 **必须** 以「?」作为前缀。
+     * - 如果存在片段（Fragment），则 **必须** 以「#」作为前缀。
      *
      * @see http://tools.ietf.org/html/rfc3986#section-4.1
      * @return string
